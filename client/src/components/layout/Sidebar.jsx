@@ -1,8 +1,7 @@
-import { NavLink } from "react-router-dom";
-import {
-  LayoutDashboard, Package, ShoppingCart,
-  Users, BarChart3, Settings,
-} from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { LayoutDashboard, Package, ShoppingCart, Users, BarChart3, ChevronRight, LogOut } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import toast from "react-hot-toast";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -12,6 +11,15 @@ const navItems = [
 ];
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    navigate("/login");
+  };
+
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
@@ -37,23 +45,15 @@ export default function Sidebar() {
             {label}
           </NavLink>
         ))}
-
-        <div className="nav-section-label" style={{ marginTop: 20 }}>System</div>
-        <div className="nav-item" style={{ cursor: "default", opacity: 0.5 }}>
-          <Settings size={17} />
-          Settings
-        </div>
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-footer-user">
-          <div className="sidebar-footer-avatar">A</div>
-          <div className="sidebar-footer-info">
-            <div className="sidebar-footer-name">Admin User</div>
-            <div className="sidebar-footer-role">Administrator</div>
-          </div>
-          <div className="sidebar-footer-dot" title="Online" />
-        </div>
+
+
+        <button className="sidebar-logout-btn" onClick={handleLogout}>
+          <LogOut size={15} />
+          Logout
+        </button>
       </div>
     </aside>
   );

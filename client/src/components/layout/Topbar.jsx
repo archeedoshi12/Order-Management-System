@@ -1,13 +1,15 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const titles = {
-  "/": { title: "Dashboard", subtitle: "Welcome back — here's what's happening today" },
-  "/products": { title: "Products", subtitle: "Manage your product inventory" },
-  "/orders": { title: "Orders", subtitle: "Track and manage customer orders" },
-  "/customers": { title: "Customers", subtitle: "Manage your customer base" },
+  "/":         { title: "Dashboard",  subtitle: "Welcome back — here's what's happening today" },
+  "/products": { title: "Products",   subtitle: "Manage your product inventory" },
+  "/orders":   { title: "Orders",     subtitle: "Track and manage customer orders" },
+  "/customers":{ title: "Customers",  subtitle: "Manage your customer base" },
+  "/profile":  { title: "Edit Profile", subtitle: "Update your account information" },
 };
 
 export default function Topbar() {
+  const navigate = useNavigate();
   const info = titles[useLocation().pathname] || { title: "InventoryPro", subtitle: "" };
 
   return (
@@ -20,11 +22,14 @@ export default function Topbar() {
       </div>
       <div className="topbar-right">
         <div className="topbar-divider" />
-        <div className="topbar-user">
-          <div className="topbar-user-name">Admin User</div>
-          <div className="topbar-user-role">Administrator</div>
+        <div
+          className="topbar-avatar"
+          onClick={() => navigate("/profile")}
+          style={{ cursor: "pointer" }}
+          title="Edit Profile"
+        >
+          A
         </div>
-        <div className="topbar-avatar">A</div>
       </div>
     </header>
   );

@@ -8,8 +8,13 @@ const app = express();
 
 connectDB();
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || "*",
+  credentials: true,
+}));
 app.use(express.json());
+
+app.get("/", (req, res) => res.json({ message: "InventoryPro API is running" }));
 
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/products", require("./routes/productRoutes"));

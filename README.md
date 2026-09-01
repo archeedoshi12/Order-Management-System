@@ -2,11 +2,6 @@
 
 A full-stack MERN application for managing products, stock, and customer orders.
 
-## Screenshots
-
-> Dashboard, Products, Orders, and Customers pages with full CRUD, search, filters, and modals.
-
----
 
 ## Tech Stack
 
