@@ -1,200 +1,197 @@
-# InventoryPro — Mini Inventory & Order Management System
+# InventoryPro — Mini Inventory & Order Management System (MERN Stack)
 
-A full-stack MERN application for managing products, stock, and customer orders.
-
-
-## Tech Stack
-
-- **Backend:** Node.js, Express.js, MongoDB, Mongoose
-- **Frontend:** React.js, React Router v6, Axios, Lucide React, React Hot Toast
-- **Styling:** Custom CSS Design System (no external UI framework)
+A production-ready full-stack **MERN** (MongoDB, Express.js, React.js, Node.js) application designed for high-concurrency inventory tracking, atomic order processing, customer management, and analytical business intelligence.
 
 ---
 
-## Setup Instructions
+## 🌐 Live Deployments & Documentation Links
+
+| Resource | URL | Description |
+|---|---|---|
+| **Live Frontend (Vercel)** | [https://oms-mernstack.vercel.app/](https://oms-mernstack.vercel.app/) | Responsive React web app with custom CSS design system |
+| **Live Backend API (Render)** | [https://order-management-system-bmr1.onrender.com](https://order-management-system-bmr1.onrender.com) | Express & Node.js RESTful API |
+| **Interactive Swagger API Docs** | [https://order-management-system-bmr1.onrender.com/api-docs](https://order-management-system-bmr1.onrender.com/api-docs) | OpenAPI 3.0 Interactive Documentation |
+| **Postman Collection** | [`InventoryPro_Postman_Collection.json`](./InventoryPro_Postman_Collection.json) | Ready-to-import Postman collection |
+
+---
+
+## 🔑 Demo Login Credentials
+
+You can use the following pre-configured administrative credentials to log into the live dashboard:
+
+- **Email:** `admin@inventorypro.com`
+- **Password:** `admin123`
+- **Role:** Administrator
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Framework:** React.js (v18.3.1)
+- **Routing:** React Router DOM (v6.23.1)
+- **HTTP Client:** Axios (configured with base URL normalizer & interceptors)
+- **Icons & UI:** Lucide React, React Hot Toast
+- **Data Visualization:** Recharts
+- **Styling:** Custom CSS Design System (clean dark/light glassmorphism, responsive grid layouts, micro-animations, no third-party CSS bloat)
+
+### Backend
+- **Runtime:** Node.js (v20+ / v22+) & Express.js (v4.19.2)
+- **Database:** MongoDB Atlas with Mongoose ODM (v8.4.1)
+- **Validation:** Express-Validator (v7.1.0)
+- **Concurrency & Integrity:** MongoDB ACID Transactions & Sessions
+- **API Documentation:** Swagger UI Express & OpenAPI 3.0 (`/api-docs`)
+- **Security:** CORS origin whitelisting, HTTP parameter sanitization
+
+---
+
+## 🌟 Key Features
+
+1. **Analytical Dashboard:**
+   - Real-time revenue calculation, order volume tracking, low-stock threshold monitoring, and historical performance graphs.
+2. **Product Catalog & Stock Management:**
+   - Full CRUD for products, auto-categorization, SKU uniqueness validation, real-time stock levels, and search/filter/pagination.
+3. **Atomic Order Processing Lifecycle:**
+   - Create orders with price snapshots.
+   - Atomic stock reservation & deduction using **MongoDB Transactions** upon confirmation.
+   - Safe cancellation with automatic stock restoration.
+4. **Customer Relationship Management (CRM):**
+   - Customer profiles, contact directories, purchase history, and uniqueness validation.
+5. **Interactive Swagger Documentation:**
+   - Full OpenAPI 3.0 specs with live test requests directly from the browser at `/api-docs`.
+
+---
+
+## 🧠 Critical Business & Concurrency Logic Handled
+
+### 1. Race Conditions & Double-Spend Stock Prevention
+- **Challenge:** Two users attempting to buy the last unit in stock simultaneously.
+- **Solution:** MongoDB **ACID transactions with database sessions** in `updateOrderStatus`. Stock deduction happens atomically using `$inc: { stock: -item.quantity }` conditional on `{ stock: { $gte: item.quantity } }`. If concurrent requests attempt to oversell stock, the transaction aborts and returns an `Insufficient Stock` error.
+
+### 2. Line Item Merging
+- **Challenge:** User adds the same SKU multiple times in one order draft.
+- **Solution:** `createOrder` merges identical product entries into a single aggregated quantity before checking stock and persisting items.
+
+### 3. Historical Price Snapshots
+- **Challenge:** If a product price changes next month, historical orders must preserve their original purchase amount.
+- **Solution:** Each line item stores a permanent snapshot of `unitPrice`, `productName`, and `productSku` at order creation time. Total order amount is frozen and immutable.
+
+### 4. Product Deletion Integrity
+- **Challenge:** Deleting a product could corrupt existing historical orders.
+- **Solution:** Because orders store item snapshots, products can safely be archived or deleted without breaking past order receipts.
+
+### 5. Order State Machine Transitions
+- `pending` ➔ `confirmed` (Validates & deducts inventory)
+- `pending` ➔ `cancelled` (No inventory change)
+- `confirmed` ➔ `cancelled` (Restores deducted inventory atomically)
+- `cancelled` ➔ Cannot be edited, cancelled, or re-confirmed.
+
+---
+
+## 📖 API Documentation & Endpoints
+
+Interactive Swagger UI is accessible at:  
+👉 **[https://order-management-system-bmr1.onrender.com/api-docs](https://order-management-system-bmr1.onrender.com/api-docs)**
+
+### Summary of REST Endpoints:
+
+#### 📊 Dashboard
+- `GET /api/dashboard` — Fetch analytical summary counters, revenue totals, low-stock count, and recent orders.
+
+#### 📦 Products
+- `GET /api/products` — List products (supports `search`, `category`, `status`, `page`, `limit`).
+- `GET /api/products/categories` — Get distinct category list.
+- `GET /api/products/:id` — Retrieve product details.
+- `POST /api/products` — Create product (Validates unique SKU).
+- `PUT /api/products/:id` — Update product details.
+- `DELETE /api/products/:id` — Delete product.
+
+#### 🛒 Orders
+- `GET /api/orders` — List orders (supports `status`, `page`, `limit`).
+- `GET /api/orders/:id` — Get single order with populated customer data.
+- `POST /api/orders` — Create order (merges duplicate items & creates price snapshots).
+- `PATCH /api/orders/:id/status` — Transition status (`pending`, `confirmed`, `cancelled`) with atomic transaction.
+- `DELETE /api/orders/:id` — Delete pending or cancelled order.
+
+#### 👥 Customers
+- `GET /api/customers` — List customers (supports `search`, `page`, `limit`).
+- `GET /api/customers/:id` — Get single customer profile.
+- `POST /api/customers` — Create customer (Validates unique email).
+- `PUT /api/customers/:id` — Update customer profile.
+- `DELETE /api/customers/:id` — Delete customer.
+
+---
+
+## 💻 Local Development Setup
 
 ### Prerequisites
-- Node.js >= 16
-- MongoDB running locally on port `27017`
+- Node.js >= 18.x
+- MongoDB (local instance or MongoDB Atlas URI)
 
-### 1. Clone the repository
+### 1. Clone & Install
 ```bash
-git clone <your-repo-url>
-cd inventory-order-management
-```
-
-### 2. Install all dependencies
-```bash
+git clone https://github.com/archeedoshi12/Order-Management-System.git
+cd Order-Management-System
 npm run install-all
 ```
 
-### 3. Configure environment variables
-```bash
-cp server/.env.example server/.env
-```
-Edit `server/.env` with your values.
+### 2. Configure Environment Variables
 
-### 4. Run the application
-```bash
-npm run dev
-```
-- Backend: http://localhost:5000
-- Frontend: http://localhost:3000
-
----
-
-## Environment Variables
-
+**Backend (`server/.env`):**
 ```env
 PORT=5000
-MONGO_URI=mongodb://localhost:27017/inventory_db
 NODE_ENV=development
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/inventory_db?retryWrites=true&w=majority
+CLIENT_URL=http://localhost:3000
+```
+
+**Frontend (`client/.env`):**
+```env
+REACT_APP_API_URL=http://localhost:5000/api
+```
+
+### 3. Run Locally
+```bash
+# Run both backend and frontend concurrently
+npm run dev
+
+# Or run separately:
+npm run server  # http://localhost:5000
+npm run client  # http://localhost:3000
 ```
 
 ---
 
-## API Reference
-
-### Products
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/products` | List products (search, filter, paginate) |
-| GET | `/api/products/categories` | Get distinct categories |
-| GET | `/api/products/:id` | Get single product |
-| POST | `/api/products` | Create product |
-| PUT | `/api/products/:id` | Update product |
-| DELETE | `/api/products/:id` | Delete product |
-
-### Orders
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/orders` | List orders (filter by status, paginate) |
-| GET | `/api/orders/:id` | Get order details |
-| POST | `/api/orders` | Create order |
-| PATCH | `/api/orders/:id/status` | Update order status |
-| DELETE | `/api/orders/:id` | Delete pending/cancelled order |
-
-### Customers
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/customers` | List customers (search, paginate) |
-| GET | `/api/customers/:id` | Get single customer |
-| POST | `/api/customers` | Create customer |
-| PUT | `/api/customers/:id` | Update customer |
-| DELETE | `/api/customers/:id` | Delete customer |
-
-### Dashboard
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/dashboard` | Get stats and recent orders |
-
----
-
-## Database Models
-
-### Product
-```
-name, sku (unique), price, stock, category, status (active/inactive), description, timestamps
-```
-
-### Customer
-```
-name, email (unique), phone, address, timestamps
-```
-
-### Order
-```
-orderNumber (auto-generated), customer (ref), items[], totalAmount, status (pending/confirmed/cancelled), notes, timestamps
-```
-
-### Order Item (embedded)
-```
-product (ref), productName (snapshot), productSku (snapshot), quantity, unitPrice (snapshot), subtotal
-```
-
-> Order items store **price snapshots** at the time of order creation. This ensures the order total remains correct even if the product price changes later.
-
----
-
-## Tricky Logic Explained
-
-### 1. Race Condition — Two users ordering last stock
-MongoDB **transactions with sessions** are used in `updateOrderStatus`. Stock is only deducted when an order is **confirmed** (not created). The `$inc` operation is atomic. If two users confirm simultaneously, the second will fail with an "Insufficient stock" error.
-
-### 2. Same product added multiple times in one order
-On the backend in `createOrder`, items are **merged by product ID** before processing. Quantities are summed, and the total stock check is done against the merged quantity.
-
-### 3. Product deleted after used in an order
-Order items store **snapshots** of `productName`, `productSku`, and `unitPrice` at creation time. Deleting a product does not affect existing orders — all historical data is preserved.
-
-### 4. Cancelled order cancelled again
-`updateOrderStatus` checks `if (order.status === "cancelled")` and returns a `400` error: "Cannot update a cancelled order."
-
-### 5. Confirmed order edited
-Confirmed orders cannot have their status reverted to pending. The only allowed transition from `confirmed` is to `cancelled` (which restores stock).
-
-### 6. Price changes after order created
-Prices are **snapshotted** in `unitPrice` and `subtotal` fields on the order item. The `totalAmount` is calculated at creation time and never recalculated from current product prices.
-
-### 7. Invalid/negative quantity
-Validated at both frontend (form validation) and backend (express-validator + manual check). Quantities must be positive integers ≥ 1.
-
-### 8. Duplicate SKU
-MongoDB unique index on `sku` field. The error handler catches `code 11000` (duplicate key) and returns a clean `409 Conflict` response.
-
-### 9. Order total correctness
-`totalAmount` is computed server-side at order creation using current product prices and stored permanently. It is never derived from current product data.
-
----
-
-## Folder Structure
+## 📁 Repository Structure
 
 ```
-├── server/
-│   ├── config/db.js
-│   ├── controllers/
-│   │   ├── productController.js
-│   │   ├── orderController.js
-│   │   ├── customerController.js
-│   │   └── dashboardController.js
-│   ├── middleware/
-│   │   ├── errorHandler.js
-│   │   └── validate.js
-│   ├── models/
-│   │   ├── Product.js
-│   │   ├── Customer.js
-│   │   └── Order.js
-│   ├── routes/
-│   │   ├── productRoutes.js
-│   │   ├── orderRoutes.js
-│   │   ├── customerRoutes.js
-│   │   └── dashboardRoutes.js
-│   ├── .env.example
-│   └── index.js
-├── client/
-│   ├── public/index.html
-│   └── src/
-│       ├── components/
-│       │   ├── common/
-│       │   │   ├── Modal.jsx
-│       │   │   ├── ConfirmDialog.jsx
-│       │   │   └── Pagination.jsx
-│       │   └── layout/
-│       │       ├── Sidebar.jsx
-│       │       └── Topbar.jsx
-│       ├── pages/
-│       │   ├── Dashboard.jsx
-│       │   ├── Products.jsx
-│       │   ├── ProductForm.jsx
-│       │   ├── Orders.jsx
-│       │   ├── OrderForm.jsx
-│       │   ├── OrderDetail.jsx
-│       │   ├── Customers.jsx
-│       │   └── CustomerForm.jsx
-│       ├── services/api.js
-│       ├── utils/helpers.js
-│       ├── App.js
-│       └── index.js
+├── client/                     # React Single Page Application
+│   ├── public/                 # HTML shell and public assets
+│   ├── src/
+│   │   ├── components/         # Reusable UI components & layouts
+│   │   ├── context/            # AuthContext & global state
+│   │   ├── pages/              # Dashboard, Products, Orders, Customers, Login
+│   │   ├── services/api.js     # Axios client with base URL normalizer
+│   │   ├── styles/             # Modular CSS design system
+│   │   └── App.js              # Routing and navigation
+│   ├── package.json
+│   └── vercel.json             # SPA routing rewrites for Vercel
+├── server/                     # Express & Node.js REST API
+│   ├── config/
+│   │   ├── db.js               # MongoDB connection
+│   │   └── swaggerDoc.js       # OpenAPI 3.0 specification definition
+│   ├── controllers/            # Request handlers for Products, Orders, Customers, Dashboard
+│   ├── middleware/             # Error handlers & validation middleware
+│   ├── models/                 # Mongoose schemas (Product, Customer, Order)
+│   ├── routes/                 # Express API routes
+│   ├── index.js                # Server entry point with Swagger UI
+│   └── package.json
+├── InventoryPro_Postman_Collection.json # Postman API collection
 ├── package.json
 └── README.md
 ```
+
+---
+
+## 📄 License
+This project is licensed under the MIT License.

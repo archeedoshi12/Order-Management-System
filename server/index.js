@@ -4,6 +4,9 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
 
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./config/swaggerDoc");
+
 const app = express();
 
 connectDB();
@@ -14,7 +17,17 @@ app.use(cors({
 }));
 app.use(express.json());
 
-app.get("/", (req, res) => res.json({ message: "InventoryPro API is running" }));
+// Root health check & API docs routes
+app.get("/", (req, res) => res.json({ 
+  message: "InventoryPro API is running",
+  docs: "/api-docs",
+  status: "healthy"
+}));
+
+// Swagger Documentation endpoints
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.get("/api-docs.json", (req, res) => res.json(swaggerDocument));
 
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/products", require("./routes/productRoutes"));
