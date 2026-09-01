@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --legacy-peer-deps && rm -rf node_modules/fork-ts-checker-webpack-plugin",
+  "installCommand": "npm install --legacy-peer-deps && rm -rf /vercel/path0/client/node_modules/fork-ts-checker-webpack-plugin",
   "buildCommand": "npm run build",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
