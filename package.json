@@ -1,0 +1,13 @@
+{
+  "name": "inventory-order-management",
+  "version": "1.0.0",
+  "scripts": {
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install-all": "cd server && npm install && cd ../client && npm install --legacy-peer-deps"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
