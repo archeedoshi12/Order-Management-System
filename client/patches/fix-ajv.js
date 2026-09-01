@@ -1,20 +1,37 @@
+'use strict';
 const fs = require('fs');
 const path = require('path');
 
-const targets = [
-  'node_modules/fork-ts-checker-webpack-plugin/node_modules/ajv-keywords/keywords/_formatLimit.js',
-  'node_modules/react-dev-utils/node_modules/ajv-keywords/keywords/_formatLimit.js',
-];
+const nodeModules = path.join(__dirname, '..', 'node_modules');
 
-targets.forEach(target => {
-  const filePath = path.join(__dirname, '..', target);
-  if (fs.existsSync(filePath)) {
-    let content = fs.readFileSync(filePath, 'utf8');
-    content = content.replace(
-      'var formats = ajv._formats;',
-      'var formats = ajv._formats || {};'
-    );
-    fs.writeFileSync(filePath, content);
-    console.log('Patched:', target);
+function findAndPatch(dir) {
+  const target = path.join(dir, 'ajv-keywords', 'keywords', '_formatLimit.js');
+  if (fs.existsSync(target)) {
+    let content = fs.readFileSync(target, 'utf8');
+    if (content.includes('var formats = ajv._formats;')) {
+      content = content.replace(
+        'var formats = ajv._formats;',
+        'var formats = ajv._formats || {};'
+      );
+      fs.writeFileSync(target, content);
+      console.log('Patched:', target);
+    }
   }
-});
+}
+
+// Walk node_modules one level deep to find nested ajv-keywords
+if (fs.existsSync(nodeModules)) {
+  fs.readdirSync(nodeModules).forEach(pkg => {
+    const pkgDir = path.join(nodeModules, pkg);
+    findAndPatch(pkgDir);
+    // check nested node_modules
+    const nested = path.join(pkgDir, 'node_modules');
+    if (fs.existsSync(nested)) {
+      fs.readdirSync(nested).forEach(subpkg => {
+        findAndPatch(path.join(nested, subpkg));
+      });
+    }
+  });
+}
+
+console.log('Patch complete.');
