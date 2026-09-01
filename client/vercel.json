@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --legacy-peer-deps && rm -rf /vercel/path0/client/node_modules/fork-ts-checker-webpack-plugin",
+  "installCommand": "npm install --legacy-peer-deps && find /vercel/path0/client/node_modules -path '*/ajv-keywords/keywords/_formatLimit.js' -exec sed -i 's/var formats = ajv._formats/var formats = ajv._formats || {}/g' {} \;",
   "buildCommand": "npm run build",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
